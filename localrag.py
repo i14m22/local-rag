@@ -134,7 +134,7 @@ print(NEON_GREEN + f"Using model: {args.model}" + RESET_COLOR)
 print(NEON_GREEN + "Generating embeddings for the vault content..." + RESET_COLOR)
 vault_embeddings = []
 for content in vault_content:
-    response = ollama.embeddings(model='mistral', prompt=content)
+    response = ollama.embeddings(model='mxbai-embed-large', prompt=content)
     vault_embeddings.append(response["embedding"])
 
 # Convert to tensor and print embeddings
