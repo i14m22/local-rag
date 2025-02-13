@@ -127,6 +127,9 @@ if os.path.exists("vault.txt"):
     with open("vault.txt", "r", encoding='utf-8') as vault_file:
         vault_content = vault_file.readlines()
 
+print(NEON_GREEN + f"Using model: {args.model}" + RESET_COLOR)
+
+
 # Generate embeddings for the vault content using Ollama
 print(NEON_GREEN + "Generating embeddings for the vault content..." + RESET_COLOR)
 vault_embeddings = []
