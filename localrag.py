@@ -16,22 +16,35 @@ RESET_COLOR = '\033[0m'
 def open_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:
         return infile.read()
-
-# Function to get relevant context from the vault based on user input
 def get_relevant_context(rewritten_input, vault_embeddings, vault_content, top_k=7):
     if vault_embeddings.nelement() == 0:  # Check if the tensor has any elements
         return []
+    
     # Encode the rewritten input
     input_embedding = ollama.embeddings(model='mxbai-embed-large', prompt=rewritten_input)["embedding"]
+    input_embedding_tensor = torch.tensor(input_embedding).unsqueeze(0)
+
+    print(f"Vault Embeddings Shape: {vault_embeddings.shape}")
+    print(f"Input Embedding Shape: {input_embedding_tensor.shape}")
+    
     # Compute cosine similarity between the input and vault embeddings
-    cos_scores = torch.cosine_similarity(torch.tensor(input_embedding).unsqueeze(0), vault_embeddings)
+    cos_scores = torch.nn.functional.cosine_similarity(input_embedding_tensor, vault_embeddings, dim=1)
+    
+    print(f"Total vault embeddings: {len(vault_embeddings)}")
+    print(f"Total cosine scores: {len(cos_scores)}")
+    
     # Adjust top_k if it's greater than the number of available scores
     top_k = min(top_k, len(cos_scores))
-    # Sort the scores and get the top-k indices
-    top_indices = torch.topk(cos_scores, k=top_k)[1].tolist()
-    # Get the corresponding context from the vault
-    relevant_context = [vault_content[idx].strip() for idx in top_indices]
+
+    # Get sorted top-k indices
+    sorted_indices = torch.argsort(cos_scores, descending=True)[:top_k].tolist()
+    relevant_context = [vault_content[idx].strip() for idx in sorted_indices]
+
+    print(f"Top {top_k} relevant indices: {sorted_indices}")
+    print(f"Top {top_k} similarity scores: {cos_scores[sorted_indices]}")
+    
     return relevant_context
+
 
 def rewrite_query(user_input_json, conversation_history, ollama_model):
     user_input = json.loads(user_input_json)["Query"]
